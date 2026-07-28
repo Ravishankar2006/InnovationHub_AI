@@ -1,4 +1,5 @@
 import json
+import asyncio
 from fastapi import FastAPI, Depends, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -6,6 +7,7 @@ from pydantic import BaseModel
 from database.db import engine, Base, get_db
 from database.models import StartupProject, AgentResult
 from agents.idea_agent import validate_idea
+from agents.strategy_agent import generate_strategy
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -25,26 +27,37 @@ class StartupRequest(BaseModel):
     idea: str
 
 async def run_idea_validation(project_id: int, db_session: Session):
-    """Background task to run validation agent and update DB"""
+    """Background task to run validation & strategy agents and update DB"""
     # Fetch project
     project = db_session.query(StartupProject).filter(StartupProject.id == project_id).first()
     if not project:
         return
         
     try:
-        project.status = "validating"
+        project.status = "processing"
         db_session.commit()
         
-        # Run agent
-        result = await validate_idea(project.idea)
+        # Run both agents concurrently
+        validation_task = validate_idea(project.idea)
+        strategy_task = generate_strategy(project.idea)
         
-        # Save result
-        agent_res = AgentResult(
+        validation_res, strategy_res = await asyncio.gather(validation_task, strategy_task)
+        
+        # Save validation result
+        agent_res1 = AgentResult(
             project_id=project_id,
             agent_name="idea_validation",
-            result_json=json.dumps(result.model_dump())
+            result_json=json.dumps(validation_res.model_dump())
         )
-        db_session.add(agent_res)
+        db_session.add(agent_res1)
+        
+        # Save strategy result
+        agent_res2 = AgentResult(
+            project_id=project_id,
+            agent_name="business_strategy",
+            result_json=json.dumps(strategy_res.model_dump())
+        )
+        db_session.add(agent_res2)
         
         # Update project status
         project.status = "completed"

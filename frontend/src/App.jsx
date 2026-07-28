@@ -23,11 +23,12 @@ function App() {
   const [status, setStatus] = useState('idle'); // idle, validating, completed, failed
   const [results, setResults] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [activeTab, setActiveTab] = useState('validation');
 
   // We can poll backend for progress
   useEffect(() => {
     let intervalId;
-    if (projectId && (status === 'created' || status === 'validating')) {
+    if (projectId && (status === 'created' || status === 'validating' || status === 'processing')) {
       intervalId = setInterval(async () => {
         try {
           const res = await fetch(`http://localhost:8000/api/startup/${projectId}`);
@@ -84,9 +85,9 @@ function App() {
   };
 
   const agents = [
-    { id: 'validation', name: 'Idea Validation', icon: Compass, active: true, desc: 'Chief Innovation Officer', status: status === 'completed' ? 'done' : status === 'validating' || status === 'created' ? 'running' : 'idle' },
+    { id: 'validation', name: 'Idea Validation', icon: Compass, active: true, desc: 'Chief Innovation Officer', status: status === 'completed' ? 'done' : status === 'validating' || status === 'processing' || status === 'created' ? 'running' : 'idle' },
     { id: 'market', name: 'Market Research', icon: TrendingUp, active: false, desc: 'Market Research Analyst', status: 'locked' },
-    { id: 'strategy', name: 'Business Strategy', icon: Database, active: false, desc: 'Startup Strategy Consultant', status: 'locked' },
+    { id: 'strategy', name: 'Business Strategy', icon: Database, active: true, desc: 'Startup Strategy Consultant', status: status === 'completed' ? 'done' : status === 'validating' || status === 'processing' || status === 'created' ? 'running' : 'idle' },
     { id: 'finance', name: 'Finance', icon: DollarSign, active: false, desc: 'Chartered Financial Analyst', status: 'locked' },
     { id: 'legal', name: 'Legal & Compliance', icon: FileText, active: false, desc: 'AI Legal Consultant', status: 'locked' },
     { id: 'marketing', name: 'Marketing & Pitch', icon: Megaphone, active: false, desc: 'Marketing Director', status: 'locked' },
@@ -277,9 +278,15 @@ function App() {
                 <Compass className="w-6 h-6 text-indigo-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse" />
               </div>
               <div>
-                <h3 className="font-bold text-lg text-white">Chief Innovation Officer evaluates...</h3>
+                <h3 className="font-bold text-lg text-white">
+                  {status === 'processing' 
+                    ? 'Startup Strategy Consultant is formulating plan...' 
+                    : 'Chief Innovation Officer is validating idea...'}
+                </h3>
                 <p className="text-xs text-slate-400 mt-1 max-w-sm">
-                  Calculating uniqueness, estimating feasibility, defining target users, and summarizing product risk matrices.
+                  {status === 'processing'
+                    ? 'Designing monetization models, pricing structures, competitive moats, and roadmap timelines.'
+                    : 'Calculating uniqueness, estimating feasibility, defining target users, and summarizing product risk matrices.'}
                 </p>
               </div>
               <div className="w-48 bg-slate-950 h-1.5 rounded-full overflow-hidden border border-slate-800">
@@ -288,124 +295,261 @@ function App() {
             </div>
           )}
 
-          {/* Validation Results Dashboard */}
+          {/* Validation & Strategy Results Dashboard */}
           {status === 'completed' && results && results.idea_validation && (
             <div className="space-y-6">
               
-              {/* Score & Summary Card */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                
-                {/* Score Dial */}
-                <div className="glass-panel rounded-2xl p-6 flex flex-col items-center justify-center text-center min-h-[220px]">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">
-                    Innovation Score
-                  </h3>
-                  <div className="relative flex items-center justify-center">
-                    {/* Ring background */}
-                    <svg className="w-32 h-32 transform -rotate-90">
-                      <circle 
-                        cx="64" 
-                        cy="64" 
-                        r="52" 
-                        className="stroke-slate-800" 
-                        strokeWidth="8" 
-                        fill="transparent" 
-                      />
-                      <circle 
-                        cx="64" 
-                        cy="64" 
-                        r="52" 
-                        className="stroke-indigo-500" 
-                        strokeWidth="8" 
-                        fill="transparent" 
-                        strokeDasharray={326.7}
-                        strokeDashoffset={326.7 - (326.7 * results.idea_validation.innovation_score) / 100}
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <div className="absolute text-center">
-                      <span className="text-3xl font-extrabold tracking-tight text-white">
-                        {results.idea_validation.innovation_score}
-                      </span>
-                      <span className="text-xs text-slate-500 block">/ 100</span>
+              {/* Tab Selector */}
+              <div className="flex border-b border-slate-800 gap-6 mb-6">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('validation')}
+                  className={`pb-3 text-xs font-bold tracking-wide uppercase transition-all border-b-2 cursor-pointer ${
+                    activeTab === 'validation'
+                      ? 'border-indigo-500 text-white font-extrabold'
+                      : 'border-transparent text-slate-500 hover:text-slate-350'
+                  }`}
+                >
+                  Validation Report
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('strategy')}
+                  className={`pb-3 text-xs font-bold tracking-wide uppercase transition-all border-b-2 cursor-pointer ${
+                    activeTab === 'strategy'
+                      ? 'border-indigo-500 text-white font-extrabold'
+                      : 'border-transparent text-slate-500 hover:text-slate-350'
+                  }`}
+                >
+                  Business Strategy
+                </button>
+              </div>
+
+              {activeTab === 'validation' && (
+                <div className="space-y-6">
+                  {/* Score & Summary Card */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    
+                    {/* Score Dial */}
+                    <div className="glass-panel rounded-2xl p-6 flex flex-col items-center justify-center text-center min-h-[220px]">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">
+                        Innovation Score
+                      </h3>
+                      <div className="relative flex items-center justify-center">
+                        {/* Ring background */}
+                        <svg className="w-32 h-32 transform -rotate-90">
+                          <circle 
+                            cx="64" 
+                            cy="64" 
+                            r="52" 
+                            className="stroke-slate-800" 
+                            strokeWidth="8" 
+                            fill="transparent" 
+                          />
+                          <circle 
+                            cx="64" 
+                            cy="64" 
+                            r="52" 
+                            className="stroke-indigo-500" 
+                            strokeWidth="8" 
+                            fill="transparent" 
+                            strokeDasharray={326.7}
+                            strokeDashoffset={326.7 - (326.7 * results.idea_validation.innovation_score) / 100}
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <div className="absolute text-center">
+                          <span className="text-3xl font-extrabold tracking-tight text-white">
+                            {results.idea_validation.innovation_score}
+                          </span>
+                          <span className="text-xs text-slate-500 block">/ 100</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Problem Statement & Value Proposition */}
+                    <div className="md:col-span-2 glass-panel rounded-2xl p-6 flex flex-col justify-between min-h-[220px]">
+                      <div>
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                          Core Pain Points Addressed
+                        </h3>
+                        <p className="text-sm text-slate-205 leading-relaxed">
+                          {results.idea_validation.problem_statement}
+                        </p>
+                      </div>
+                      <div className="border-t border-slate-900 pt-4 mt-4">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-400 mb-2">
+                          Proposed Value Proposition
+                        </h3>
+                        <p className="text-sm text-indigo-200/90 italic font-medium leading-relaxed">
+                          "{results.idea_validation.value_proposition}"
+                        </p>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Target Audience Badge list */}
+                  <div className="glass-panel rounded-2xl p-6">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+                      Target User Segments
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {results.idea_validation.target_audience.map((audience, idx) => (
+                        <span 
+                          key={idx} 
+                          className="bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-semibold px-3 py-1.5 rounded-full"
+                        >
+                          {audience}
+                        </span>
+                      ))}
                     </div>
                   </div>
-                </div>
 
-                {/* Problem Statement & Value Proposition */}
-                <div className="md:col-span-2 glass-panel rounded-2xl p-6 flex flex-col justify-between min-h-[220px]">
-                  <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-                      Core Pain Points Addressed
-                    </h3>
-                    <p className="text-sm text-slate-200 leading-relaxed">
-                      {results.idea_validation.problem_statement}
-                    </p>
+                  {/* Risks vs Recommendations */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    {/* Risk Register */}
+                    <div className="glass-panel rounded-2xl p-6 border-amber-500/10">
+                      <h3 className="text-sm font-bold text-amber-400 mb-4 flex items-center gap-2">
+                        <AlertTriangle className="w-5 h-5" /> Potential Obstacles & Risks
+                      </h3>
+                      <ul className="space-y-3">
+                        {results.idea_validation.risks.map((risk, idx) => (
+                          <li key={idx} className="flex gap-2.5 items-start text-sm text-slate-350 leading-relaxed">
+                            <span className="text-amber-500 mt-1 shrink-0">•</span>
+                            <span>{risk}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Recommendations */}
+                    <div className="glass-panel rounded-2xl p-6 border-indigo-500/15">
+                      <h3 className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2">
+                        <Lightbulb className="w-5 h-5" /> Strategic Recommendations
+                      </h3>
+                      <ul className="space-y-3">
+                        {results.idea_validation.recommendations.map((rec, idx) => (
+                          <li key={idx} className="flex gap-2.5 items-start text-sm text-slate-300 leading-relaxed">
+                            <span className="text-indigo-400 mt-1 shrink-0">•</span>
+                            <span>{rec}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
                   </div>
-                  <div className="border-t border-slate-900 pt-4 mt-4">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-400 mb-2">
-                      Proposed Value Proposition
-                    </h3>
-                    <p className="text-sm text-indigo-200/90 italic font-medium leading-relaxed">
-                      "{results.idea_validation.value_proposition}"
-                    </p>
+                </div>
+              )}
+
+              {activeTab === 'strategy' && results.business_strategy && (
+                <div className="space-y-6">
+                  
+                  {/* Grid for Business Model and Pricing Model */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    {/* Business Model */}
+                    <div className="glass-panel rounded-2xl p-6 border-indigo-500/10">
+                      <h3 className="text-xs font-bold text-indigo-400 mb-3 uppercase tracking-wider flex items-center gap-2">
+                        <Database className="w-4 h-4 text-indigo-500" /> Business Model
+                      </h3>
+                      <p className="text-sm text-slate-205 leading-relaxed">
+                        {results.business_strategy.business_model}
+                      </p>
+                    </div>
+
+                    {/* Pricing Model */}
+                    <div className="glass-panel rounded-2xl p-6 border-indigo-500/10">
+                      <h3 className="text-xs font-bold text-indigo-400 mb-3 uppercase tracking-wider flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 text-indigo-500" /> Pricing Strategy
+                      </h3>
+                      <p className="text-sm text-slate-205 leading-relaxed">
+                        {results.business_strategy.pricing_model}
+                      </p>
+                    </div>
+
                   </div>
+
+                  {/* Moat & GTM */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    
+                    {/* Competitive Moat */}
+                    <div className="md:col-span-1 glass-panel rounded-2xl p-6 border-emerald-500/10">
+                      <h3 className="text-xs font-bold text-emerald-400 mb-3 uppercase tracking-wider flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-emerald-500" /> Competitive Moat
+                      </h3>
+                      <p className="text-sm text-slate-205 leading-relaxed">
+                        {results.business_strategy.competitive_moat}
+                      </p>
+                    </div>
+
+                    {/* Go-To-Market Tactics */}
+                    <div className="md:col-span-2 glass-panel rounded-2xl p-6 border-indigo-500/10">
+                      <h3 className="text-xs font-bold text-indigo-400 mb-4 uppercase tracking-wider flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4 text-indigo-500" /> Go-To-Market Tactics
+                      </h3>
+                      <ul className="space-y-3">
+                        {results.business_strategy.go_to_market.map((tactic, idx) => (
+                          <li key={idx} className="flex gap-2.5 items-start text-sm text-slate-205 leading-relaxed">
+                            <span className="text-indigo-400 mt-1 shrink-0">•</span>
+                            <span>{tactic}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                  </div>
+
+                  {/* Roadmap Timeline */}
+                  <div className="glass-panel rounded-2xl p-6 border-slate-800">
+                    <h3 className="text-xs font-bold text-white mb-6 uppercase tracking-wider flex items-center gap-2">
+                      <Compass className="w-4 h-4 text-indigo-400" /> 30-60-90 Day Roadmap
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+                      
+                      {/* Day 30 */}
+                      <div className="relative pl-6 border-l-2 border-indigo-500/30 hover:border-indigo-500 transition-all duration-300">
+                        <div className="absolute -left-[7px] top-1 w-3 h-3 rounded-full bg-indigo-500 ring-4 ring-indigo-950"></div>
+                        <h4 className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1.5">Days 1 - 30</h4>
+                        <p className="text-sm text-slate-200 leading-relaxed font-semibold">
+                          Product MVP & Validation
+                        </p>
+                        <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                          {results.business_strategy.roadmap.phase_1_30_days}
+                        </p>
+                      </div>
+
+                      {/* Day 60 */}
+                      <div className="relative pl-6 border-l-2 border-indigo-500/30 hover:border-indigo-500 transition-all duration-300">
+                        <div className="absolute -left-[7px] top-1 w-3 h-3 rounded-full bg-indigo-500 ring-4 ring-indigo-950"></div>
+                        <h4 className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1.5">Days 31 - 60</h4>
+                        <p className="text-sm text-slate-200 leading-relaxed font-semibold">
+                          Beta Operations & Feedback
+                        </p>
+                        <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                          {results.business_strategy.roadmap.phase_2_60_days}
+                        </p>
+                      </div>
+
+                      {/* Day 90 */}
+                      <div className="relative pl-6 border-l-2 border-indigo-500/30 hover:border-indigo-500 transition-all duration-300">
+                        <div className="absolute -left-[7px] top-1 w-3 h-3 rounded-full bg-indigo-500 ring-4 ring-indigo-950"></div>
+                        <h4 className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1.5">Days 61 - 90</h4>
+                        <p className="text-sm text-slate-200 leading-relaxed font-semibold">
+                          Public Launch & Traction
+                        </p>
+                        <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                          {results.business_strategy.roadmap.phase_3_90_days}
+                        </p>
+                      </div>
+
+                    </div>
+                  </div>
+
                 </div>
-
-              </div>
-
-              {/* Target Audience Badge list */}
-              <div className="glass-panel rounded-2xl p-6">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
-                  Target User Segments
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {results.idea_validation.target_audience.map((audience, idx) => (
-                    <span 
-                      key={idx} 
-                      className="bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-semibold px-3 py-1.5 rounded-full"
-                    >
-                      {audience}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Risks vs Recommendations */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
-                {/* Risk Register */}
-                <div className="glass-panel rounded-2xl p-6 border-amber-500/10">
-                  <h3 className="text-sm font-bold text-amber-400 mb-4 flex items-center gap-2">
-                    <AlertTriangle className="w-5 h-5" /> Potential Obstacles & Risks
-                  </h3>
-                  <ul className="space-y-3">
-                    {results.idea_validation.risks.map((risk, idx) => (
-                      <li key={idx} className="flex gap-2.5 items-start text-sm text-slate-350 leading-relaxed">
-                        <span className="text-amber-500 mt-1 shrink-0">•</span>
-                        <span>{risk}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Recommendations */}
-                <div className="glass-panel rounded-2xl p-6 border-indigo-500/15">
-                  <h3 className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2">
-                    <Lightbulb className="w-5 h-5" /> Strategic Recommendations
-                  </h3>
-                  <ul className="space-y-3">
-                    {results.idea_validation.recommendations.map((rec, idx) => (
-                      <li key={idx} className="flex gap-2.5 items-start text-sm text-slate-300 leading-relaxed">
-                        <span className="text-indigo-400 mt-1 shrink-0">•</span>
-                        <span>{rec}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-              </div>
-
+              )}
             </div>
           )}
 
