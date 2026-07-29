@@ -1,5 +1,6 @@
 import json
 import asyncio
+import sys
 from fastapi import FastAPI, Depends, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -12,6 +13,25 @@ from agents.finance_agent import generate_finance_model
 from agents.market_agent import generate_market_analysis
 from agents.legal_agent import generate_legal_risk_analysis
 from agents.marketing_agent import generate_marketing_strategy
+
+# Intercept stdout/stderr to prevent detached PTY errors
+class SafeWriter:
+    def __init__(self, stream):
+        self.stream = stream
+    def write(self, data):
+        try:
+            self.stream.write(data)
+            self.stream.flush()
+        except Exception:
+            pass
+    def flush(self):
+        try:
+            self.stream.flush()
+        except Exception:
+            pass
+
+sys.stdout = SafeWriter(sys.stdout)
+sys.stderr = SafeWriter(sys.stderr)
 
 # Create tables
 Base.metadata.create_all(bind=engine)
