@@ -1,7 +1,9 @@
 import json
 import asyncio
 import sys
-from fastapi import FastAPI, Depends, BackgroundTasks, HTTPException
+import pypdf
+import io
+from fastapi import FastAPI, Depends, BackgroundTasks, HTTPException, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -162,6 +164,51 @@ async def create_startup_project(
         "status": project.status,
         "idea": project.idea
     }
+
+@app.post("/api/startup/upload")
+async def create_startup_from_pdf(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    """Parses an uploaded PDF problem statement, extracts its text, and runs the validation pipeline."""
+    if not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="Only PDF files (.pdf) are supported.")
+        
+    try:
+        contents = await file.read()
+        pdf_file = io.BytesIO(contents)
+        reader = pypdf.PdfReader(pdf_file)
+        
+        extracted_text = []
+        for page in reader.pages:
+            text = page.extract_text()
+            if text:
+                extracted_text.append(text)
+                
+        idea_text = "\n".join(extracted_text).strip()
+        if not idea_text:
+            raise HTTPException(status_code=400, detail="Could not extract readable text from the uploaded PDF. Make sure it is not scanned or empty.")
+            
+        project = StartupProject(idea=idea_text, status="created")
+        db.add(project)
+        db.commit()
+        db.refresh(project)
+        
+        # Run pipeline
+        background_tasks.add_task(run_idea_validation, project.id, db)
+        
+        return {
+            "project_id": project.id,
+            "status": project.status,
+            "idea": idea_text
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to process PDF upload: {str(e)}")
+
 
 @app.get("/api/startup/{project_id}")
 async def get_startup_project(project_id: int, db: Session = Depends(get_db)):

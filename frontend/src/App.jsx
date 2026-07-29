@@ -37,7 +37,8 @@ import {
   Clock,
   Sparkles,
   ChevronRight,
-  Maximize2
+  Maximize2,
+  Upload
 } from 'lucide-react';
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 
@@ -243,6 +244,52 @@ function App() {
         { id: Date.now(), time: new Date().toTimeString().split(' ')[0], agent: 'System', log: `Project ID #${data.project_id} database record allocated.` },
         ...prev
       ]);
+    } catch (err) {
+      setErrorMsg(err.message);
+      setLoading(false);
+      setStatus('failed');
+      addToast(err.message, 'error');
+    }
+  };
+
+  const handlePdfUpload = async (file) => {
+    if (!file) return;
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      addToast('Invalid file format. Please upload a PDF.', 'error');
+      return;
+    }
+
+    setLoading(true);
+    setErrorMsg('');
+    setResults(null);
+    setStatus('created');
+    addToast('Uploading PDF and extracting problem statement...', 'info');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('http://localhost:8000/api/startup/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.detail || 'Failed to parse PDF file');
+      }
+
+      const data = await res.json();
+      setProjectId(data.project_id);
+      setStatus(data.status);
+      setIdea(data.idea);
+      
+      // Update ticker
+      setTickerLogs(prev => [
+        { id: Date.now(), time: new Date().toTimeString().split(' ')[0], agent: 'System', log: `PDF Upload project #${data.project_id} initialized.` },
+        ...prev
+      ]);
+      addToast('PDF text successfully extracted! Starting AI agents...', 'success');
     } catch (err) {
       setErrorMsg(err.message);
       setLoading(false);
@@ -1032,6 +1079,26 @@ function App() {
                           placeholder='Example: "An automated solar drone precision spraying service for agricultural crop management, allowing farms to hire local pilots."'
                           className="w-full min-h-[120px] bg-[#070707]/80 border border-zinc-800 rounded-xl p-4 text-zinc-200 placeholder-zinc-650 focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:border-transparent transition-all text-sm leading-relaxed font-semibold"
                         />
+
+                        {/* PDF Drag and Drop Area */}
+                        <div className="border border-dashed border-[#D4AF37]/20 hover:border-[#D4AF37]/50 rounded-xl p-5 bg-[#070707]/60 text-center transition-all cursor-pointer relative group">
+                          <input 
+                            type="file" 
+                            accept=".pdf"
+                            disabled={loading}
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files[0]) {
+                                handlePdfUpload(e.target.files[0]);
+                              }
+                            }}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
+                          />
+                          <div className="flex flex-col items-center justify-center gap-1.5 pointer-events-none">
+                            <Upload className="w-5 h-5 text-[#D4AF37] group-hover:scale-110 transition-transform animate-pulse" />
+                            <span className="text-xs font-bold text-zinc-300">Or Upload Problem Statement PDF</span>
+                            <span className="text-[9px] text-zinc-600 uppercase font-mono tracking-wider font-bold">Drag and drop file here, or click to browse</span>
+                          </div>
+                        </div>
                         
                         <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center pt-2">
                           <div className="flex gap-4 text-[10px] text-zinc-500 uppercase font-bold tracking-wider">
