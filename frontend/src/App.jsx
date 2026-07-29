@@ -35,6 +35,7 @@ import {
   Info,
   Clock
 } from 'lucide-react';
+import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 function App() {
   // Navigation & Authentication
@@ -237,11 +238,11 @@ function App() {
   // AI Workforce menu items definition
   const workforce = [
     { id: 'validation', name: 'Idea Validation', icon: Lightbulb, model: 'llama-3.3-70b-versatile', desc: 'Chief Innovation Officer', active: true, accuracy: '94.5%', latency: '1.4s' },
-    { id: 'market', name: 'Market Intelligence', icon: BarChart, model: 'llama-3.1-8b-instant', desc: 'Market Research Analyst', active: false, accuracy: '89.2%', latency: '1.1s' },
+    { id: 'market', name: 'Market Intelligence', icon: BarChart, model: 'llama-3.3-70b-versatile', desc: 'Market Research Analyst', active: true, accuracy: '89.2%', latency: '1.1s' },
     { id: 'strategy', name: 'Strategy Planning', icon: Cpu, model: 'llama-3.3-70b-versatile', desc: 'Startup Strategy Consultant', active: true, accuracy: '92.8%', latency: '1.6s' },
-    { id: 'finance', name: 'Finance modeling', icon: DollarSign, model: 'mixtral-8x7b-32768', desc: 'Chartered Financial Analyst', active: false, accuracy: '91.5%', latency: '1.5s' },
-    { id: 'legal', name: 'Legal & Risk', icon: Shield, model: 'llama-3.3-70b-versatile', desc: 'AI Legal Consultant', active: false, accuracy: '95.0%', latency: '2.1s' },
-    { id: 'marketing', name: 'Growth Marketing', icon: Rocket, model: 'llama-3.1-8b-instant', desc: 'Marketing Director', active: false, accuracy: '88.7%', latency: '0.9s' }
+    { id: 'finance', name: 'Finance modeling', icon: DollarSign, model: 'llama-3.3-70b-versatile', desc: 'Chartered Financial Analyst', active: true, accuracy: '95.1%', latency: '1.8s' },
+    { id: 'legal', name: 'Legal & Risk', icon: Shield, model: 'llama-3.3-70b-versatile', desc: 'AI Legal Consultant', active: true, accuracy: '95.0%', latency: '2.1s' },
+    { id: 'marketing', name: 'Growth Marketing', icon: Rocket, model: 'llama-3.1-8b-instant', desc: 'Marketing Director', active: true, accuracy: '88.7%', latency: '0.9s' }
   ];
 
   if (!isLoggedIn) {
@@ -843,6 +844,50 @@ function App() {
                         >
                           Business Strategy
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('finance')}
+                          className={`pb-3 text-xs font-bold tracking-wide uppercase transition-all border-b-2 cursor-pointer ${
+                            activeTab === 'finance'
+                              ? 'border-amber-500 text-white font-extrabold shadow-sm'
+                              : 'border-transparent text-zinc-500 hover:text-zinc-300'
+                          }`}
+                        >
+                          Financial Projections
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('market')}
+                          className={`pb-3 text-xs font-bold tracking-wide uppercase transition-all border-b-2 cursor-pointer ${
+                            activeTab === 'market'
+                              ? 'border-amber-500 text-white font-extrabold shadow-sm'
+                              : 'border-transparent text-zinc-500 hover:text-zinc-300'
+                          }`}
+                        >
+                          Market Intelligence
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('legal')}
+                          className={`pb-3 text-xs font-bold tracking-wide uppercase transition-all border-b-2 cursor-pointer ${
+                            activeTab === 'legal'
+                              ? 'border-amber-500 text-white font-extrabold shadow-sm'
+                              : 'border-transparent text-zinc-500 hover:text-zinc-300'
+                          }`}
+                        >
+                          Legal & Risk
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('marketing')}
+                          className={`pb-3 text-xs font-bold tracking-wide uppercase transition-all border-b-2 cursor-pointer ${
+                            activeTab === 'marketing'
+                              ? 'border-amber-500 text-white font-extrabold shadow-sm'
+                              : 'border-transparent text-zinc-500 hover:text-zinc-300'
+                          }`}
+                        >
+                          Growth Marketing
+                        </button>
                       </div>
 
                       {activeTab === 'validation' && (
@@ -1006,23 +1051,314 @@ function App() {
                         </div>
                       )}
 
+                      {activeTab === 'finance' && results.finance_modeling && (
+                        <div className="space-y-6 animate-fade-in">
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="glass-panel rounded-2xl p-5 border-amber-500/5">
+                              <h4 className="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                <DollarSign className="w-4.5 h-4.5" /> Revenue Streams
+                              </h4>
+                              <ul className="space-y-2.5">
+                                {results.finance_modeling.revenue_streams.map((stream, i) => (
+                                  <li key={i} className="flex gap-2 items-start text-xs text-zinc-250 leading-relaxed">
+                                    <span className="text-amber-500 mt-0.5">•</span>
+                                    <span>{stream}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                            <div className="glass-panel rounded-2xl p-5 border-amber-500/5">
+                              <h4 className="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                <TrendingUp className="w-4.5 h-4.5" /> Cost Structure
+                              </h4>
+                              <ul className="space-y-2.5">
+                                {results.finance_modeling.cost_structure.map((cost, i) => (
+                                  <li key={i} className="flex gap-2 items-start text-xs text-zinc-250 leading-relaxed">
+                                    <span className="text-amber-500 mt-0.5">•</span>
+                                    <span>{cost}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="glass-panel rounded-2xl p-5 border-white/5">
+                              <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Initial Funding</span>
+                              <span className="block text-xl font-black text-amber-500 mt-2">{results.finance_modeling.funding_required}</span>
+                            </div>
+                            <div className="glass-panel rounded-2xl p-5 border-white/5">
+                              <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Break-Even Timeline</span>
+                              <span className="block text-xl font-black text-emerald-400 mt-2">{results.finance_modeling.break_even_timeline}</span>
+                            </div>
+                            <div className="glass-panel rounded-2xl p-5 border-white/5">
+                              <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Key Metrics (KPIs)</span>
+                              <ul className="space-y-1.5 mt-2">
+                                {results.finance_modeling.key_metrics.map((kpi, i) => (
+                                  <li key={i} className="text-xs text-white font-medium flex gap-2">
+                                    <span className="text-amber-500">•</span> <span>{kpi}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+
+                          <div className="glass-panel rounded-2xl p-5 border-emerald-500/10">
+                            <h4 className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                              <BarChart className="w-4 h-4" /> 3-Year Projections (Live Data)
+                            </h4>
+                            <div className="h-64 w-full mt-4">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <RechartsBarChart
+                                  data={[
+                                    { name: 'Year 1', revenue: results.finance_modeling.projections.year_1_revenue },
+                                    { name: 'Year 2', revenue: results.finance_modeling.projections.year_2_revenue },
+                                    { name: 'Year 3', revenue: results.finance_modeling.projections.year_3_revenue }
+                                  ]}
+                                  margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+                                >
+                                  <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" vertical={false} />
+                                  <XAxis dataKey="name" stroke="#52525B" tick={{ fill: '#A1A1AA', fontSize: 10 }} tickLine={false} axisLine={false} />
+                                  <YAxis 
+                                    stroke="#52525B" 
+                                    tick={{ fill: '#A1A1AA', fontSize: 10 }} 
+                                    tickLine={false} 
+                                    axisLine={false} 
+                                    tickFormatter={(value) => `₹${(value / 10000000).toFixed(1)}Cr`}
+                                  />
+                                  <Tooltip 
+                                    contentStyle={{ backgroundColor: '#1B1B1B', borderColor: '#2A2A2A', borderRadius: '12px' }}
+                                    itemStyle={{ color: '#34D399', fontWeight: 'bold' }}
+                                    formatter={(value) => [`₹${(value / 10000000).toFixed(2)} Cr`, 'Revenue']}
+                                    cursor={{fill: '#2A2A2A', opacity: 0.4}}
+                                  />
+                                  <Bar dataKey="revenue" fill="#34D399" radius={[4, 4, 0, 0]} maxBarSize={60} />
+                                </RechartsBarChart>
+                              </ResponsiveContainer>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {activeTab === 'market' && results.market_intelligence && (
+                        <div className="space-y-6 animate-fade-in">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="glass-panel rounded-2xl p-5 border-amber-500/10">
+                              <span className="text-[10px] uppercase font-bold text-amber-500 tracking-wider">Total Addressable Market (TAM)</span>
+                              <span className="block text-xl font-black text-white mt-2">{results.market_intelligence.tam_size}</span>
+                            </div>
+                            <div className="glass-panel rounded-2xl p-5 border-amber-500/10">
+                              <span className="text-[10px] uppercase font-bold text-amber-500 tracking-wider">Serviceable Available Market (SAM)</span>
+                              <span className="block text-xl font-black text-white mt-2">{results.market_intelligence.sam_size}</span>
+                            </div>
+                            <div className="glass-panel rounded-2xl p-5 border-amber-500/10">
+                              <span className="text-[10px] uppercase font-bold text-amber-500 tracking-wider">Serviceable Obtainable (SOM)</span>
+                              <span className="block text-xl font-black text-emerald-400 mt-2">{results.market_intelligence.som_size}</span>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="glass-panel rounded-2xl p-5 border-white/5">
+                              <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <User className="w-4 h-4 text-amber-500" /> Target Audience Persona
+                              </h4>
+                              <p className="text-sm text-zinc-200 font-medium italic leading-relaxed mb-4">
+                                "{results.market_intelligence.target_audience.persona}"
+                              </p>
+                              <div className="space-y-3">
+                                <div>
+                                  <span className="text-[10px] font-bold text-zinc-500 uppercase">Demographics</span>
+                                  <p className="text-xs text-zinc-300 mt-1">{results.market_intelligence.target_audience.demographic}</p>
+                                </div>
+                                <div>
+                                  <span className="text-[10px] font-bold text-zinc-500 uppercase">Key Pain Points</span>
+                                  <ul className="mt-1 space-y-1">
+                                    {results.market_intelligence.target_audience.pain_points.map((point, i) => (
+                                      <li key={i} className="text-xs text-zinc-300 flex gap-2"><span className="text-amber-500">•</span> {point}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-6">
+                              <div className="glass-panel rounded-2xl p-5 border-white/5">
+                                <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                  <ShieldAlert className="w-4 h-4 text-rose-400" /> Competitor Weaknesses
+                                </h4>
+                                <div className="space-y-4">
+                                  {results.market_intelligence.competitors.map((comp, i) => (
+                                    <div key={i} className="border-l-2 border-amber-500/30 pl-3">
+                                      <span className="text-xs font-bold text-zinc-200 block">{comp.name}</span>
+                                      <span className="text-xs text-rose-300/80 mt-0.5 block">{comp.weakness}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div className="glass-panel rounded-2xl p-5 border-white/5">
+                                <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                  <TrendingUp className="w-4 h-4 text-emerald-400" /> Market Tailwinds
+                                </h4>
+                                <ul className="space-y-2">
+                                  {results.market_intelligence.market_trends.map((trend, i) => (
+                                    <li key={i} className="text-xs text-zinc-300 flex items-start gap-2">
+                                      <ArrowRight className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                                      <span className="leading-relaxed">{trend}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {activeTab === 'legal' && results.legal_risk && (
+                        <div className="space-y-6 animate-fade-in">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="glass-panel rounded-2xl p-5 border-rose-500/10">
+                              <h4 className="text-[10px] font-bold text-rose-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                <ShieldAlert className="w-4.5 h-4.5" /> Compliance Requirements
+                              </h4>
+                              <ul className="space-y-2.5">
+                                {results.legal_risk.compliance_requirements.map((req, i) => (
+                                  <li key={i} className="flex gap-2 items-start text-xs text-zinc-250 leading-relaxed">
+                                    <span className="text-rose-500 mt-0.5">•</span>
+                                    <span>{req}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                            <div className="glass-panel rounded-2xl p-5 border-amber-500/10">
+                              <h4 className="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                <AlertTriangle className="w-4.5 h-4.5" /> Potential Liabilities
+                              </h4>
+                              <ul className="space-y-2.5">
+                                {results.legal_risk.potential_liabilities.map((liab, i) => (
+                                  <li key={i} className="flex gap-2 items-start text-xs text-zinc-250 leading-relaxed">
+                                    <span className="text-amber-500 mt-0.5">•</span>
+                                    <span>{liab}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="md:col-span-1 glass-panel rounded-2xl p-5 border-white/5">
+                              <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                <Shield className="w-4 h-4 text-emerald-400" /> IP Protection
+                              </h4>
+                              <p className="text-xs text-zinc-300 leading-relaxed">{results.legal_risk.ip_protection_strategy}</p>
+                            </div>
+                            <div className="md:col-span-1 glass-panel rounded-2xl p-5 border-white/5">
+                              <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                <FileText className="w-4 h-4 text-amber-500" /> Regulatory Hurdles
+                              </h4>
+                              <p className="text-xs text-zinc-300 leading-relaxed">{results.legal_risk.regulatory_hurdles}</p>
+                            </div>
+                            <div className="md:col-span-1 glass-panel rounded-2xl p-5 border-white/5">
+                              <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                <Lock className="w-4 h-4 text-zinc-500" /> Data Privacy
+                              </h4>
+                              <p className="text-xs text-zinc-300 leading-relaxed">{results.legal_risk.data_privacy_concerns}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {activeTab === 'marketing' && results.marketing_strategy && (
+                        <div className="space-y-6 animate-fade-in">
+                          <div className="glass-panel rounded-2xl p-6 border-amber-500/10 text-center space-y-2">
+                            <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Core Marketing Message</h4>
+                            <p className="text-lg font-bold text-white italic">"{results.marketing_strategy.core_message}"</p>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="glass-panel rounded-2xl p-5 border-white/5">
+                              <h4 className="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                <Megaphone className="w-4 h-4" /> Marketing Channels
+                              </h4>
+                              <ul className="space-y-2.5">
+                                {results.marketing_strategy.marketing_channels.map((ch, i) => (
+                                  <li key={i} className="flex gap-2 items-start text-xs text-zinc-250 leading-relaxed">
+                                    <span className="text-amber-500 mt-0.5">•</span>
+                                    <span>{ch}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                            
+                            <div className="glass-panel rounded-2xl p-5 border-white/5">
+                              <h4 className="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                <User className="w-4 h-4" /> Acquisition Strategy (0-1000 users)
+                              </h4>
+                              <p className="text-xs text-zinc-300 leading-relaxed">{results.marketing_strategy.customer_acquisition_strategy}</p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="glass-panel rounded-2xl p-5 border-white/5">
+                              <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                <FileText className="w-4 h-4 text-amber-500" /> Content Strategy
+                              </h4>
+                              <ul className="space-y-2.5">
+                                {results.marketing_strategy.content_strategy.map((cs, i) => (
+                                  <li key={i} className="flex gap-2 items-start text-xs text-zinc-300 leading-relaxed">
+                                    <span className="text-amber-500 mt-0.5">•</span>
+                                    <span>{cs}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                            <div className="glass-panel rounded-2xl p-5 border-white/5">
+                              <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                <Rocket className="w-4 h-4 text-emerald-400" /> Launch Campaign Ideas
+                              </h4>
+                              <ul className="space-y-2.5">
+                                {results.marketing_strategy.launch_campaign_ideas.map((lc, i) => (
+                                  <li key={i} className="flex gap-2 items-start text-xs text-zinc-300 leading-relaxed">
+                                    <span className="text-emerald-500 mt-0.5">•</span>
+                                    <span>{lc}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                     </div>
                   )}
 
                 </div>
               )}
 
-              {/* PAGE 3: GENERAL BUSINESS STRATEGY AGENT INDEPENDENT VIEW */}
-              {currentView === 'strategy' && (
+              {/* PAGE 3: AGENT INDEPENDENT VIEW */}
+              {['strategy', 'finance', 'market', 'legal', 'marketing'].includes(currentView) && (
                 <div className="space-y-8 animate-fade-in">
                   <div className="glass-panel border-white/5 rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                     <div className="flex items-center gap-4">
                       <div className="p-3.5 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl border border-amber-400/20 shadow-md shadow-amber-500/10 text-black">
-                        <Cpu className="w-6 h-6" />
+                        {currentView === 'strategy' && <Cpu className="w-6 h-6" />}
+                        {currentView === 'finance' && <DollarSign className="w-6 h-6" />}
+                        {currentView === 'market' && <BarChart className="w-6 h-6" />}
+                        {currentView === 'legal' && <Shield className="w-6 h-6" />}
+                        {currentView === 'marketing' && <Rocket className="w-6 h-6" />}
                       </div>
                       <div>
-                        <h2 className="text-xl font-extrabold text-white">Business Strategy Agent</h2>
-                        <p className="text-xs text-zinc-500 font-semibold mt-0.5">Role: Startup Strategy Consultant | Active Model: Llama 70B</p>
+                        <h2 className="text-xl font-extrabold text-white capitalize">
+                          {currentView === 'strategy' && 'Business Strategy Agent'}
+                          {currentView === 'finance' && 'Finance Modeling Agent'}
+                          {currentView === 'market' && 'Market Intelligence Agent'}
+                          {currentView === 'legal' && 'Legal & Risk Agent'}
+                          {currentView === 'marketing' && 'Growth Marketing Agent'}
+                        </h2>
+                        <p className="text-xs text-zinc-500 font-semibold mt-0.5">
+                          Role: {currentView === 'strategy' ? 'Startup Strategy Consultant' : (currentView === 'finance' ? 'Chartered Financial Analyst' : (currentView === 'market' ? 'Market Research Analyst' : (currentView === 'legal' ? 'AI Legal Consultant' : 'Growth Marketing Director')))} | Active Model: Llama 70B
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -1032,9 +1368,11 @@ function App() {
                   </div>
 
                   <div className="glass-panel rounded-2xl p-6 border-white/5 space-y-4">
-                    <h3 className="font-bold text-sm text-white">Formulate Strategy Model</h3>
+                    <h3 className="font-bold text-sm text-white">
+                      Agent Workspace
+                    </h3>
                     <p className="text-xs text-zinc-500 leading-relaxed">
-                      You can run this agent as part of the pipeline by submitting your idea inside the **Idea Validation Agent** page. This will automatically execute both cognitive pipelines concurrently.
+                      You can run this agent as part of the pipeline by submitting your idea inside the **Idea Validation Agent** page. This will automatically execute all active cognitive pipelines concurrently.
                     </p>
                     <button 
                       onClick={() => setCurrentView('validation')}
@@ -1043,99 +1381,6 @@ function App() {
                       Navigate to Validation Board
                     </button>
                   </div>
-                </div>
-              )}
-
-              {/* PAGE 4: OTHER AGENT WORKSPACE DETAILED WORKSPACES (Market, Finance, Legal, Marketing) */}
-              {['market', 'finance', 'legal', 'marketing'].includes(currentView) && (
-                <div className="space-y-8 animate-fade-in">
-                  
-                  {/* Workspace Header */}
-                  <div className="glass-panel border-white/5 rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3.5 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl border border-amber-400/20 shadow-md shadow-amber-500/10 text-black">
-                        {currentView === 'market' && <BarChart className="w-6 h-6" />}
-                        {currentView === 'finance' && <DollarSign className="w-6 h-6" />}
-                        {currentView === 'legal' && <Shield className="w-6 h-6" />}
-                        {currentView === 'marketing' && <Rocket className="w-6 h-6" />}
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-extrabold text-white capitalize">{currentView} Agent Workspace</h2>
-                        <p className="text-xs text-zinc-500 font-semibold mt-0.5">
-                          {currentView === 'market' && 'Role: Market Research Analyst | Model: Llama 8B'}
-                          {currentView === 'finance' && 'Role: Chartered Financial Analyst | Model: Mixtral 8x7B'}
-                          {currentView === 'legal' && 'Role: AI Legal Consultant | Model: Llama 70B'}
-                          {currentView === 'marketing' && 'Role: Growth Marketing Director | Model: Llama 8B'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <span className="bg-zinc-900 border border-zinc-850 text-zinc-500 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                      Demo Locked
-                    </span>
-                  </div>
-
-                  {/* Setting variables & parameters card */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    
-                    {/* Parameters */}
-                    <div className="glass-panel rounded-2xl p-5 border-white/5 space-y-4">
-                      <h4 className="font-bold text-xs text-white uppercase tracking-wider flex items-center gap-2">
-                        <Sliders className="w-3.5 h-3.5 text-amber-550" /> Parameters
-                      </h4>
-
-                      <div className="space-y-3 pt-2 text-xs">
-                        <div className="space-y-1">
-                          <div className="flex justify-between font-medium">
-                            <span className="text-zinc-550">Temperature</span>
-                            <span className="text-white">{tempVal}</span>
-                          </div>
-                          <input 
-                            type="range" 
-                            min="0.1" 
-                            max="1.0" 
-                            step="0.1"
-                            value={tempVal}
-                            onChange={(e) => setTempVal(parseFloat(e.target.value))}
-                            className="w-full accent-amber-500"
-                          />
-                        </div>
-
-                        <div className="space-y-1">
-                          <div className="flex justify-between font-medium">
-                            <span className="text-zinc-550">Max Tokens</span>
-                            <span className="text-white">{maxTokens}</span>
-                          </div>
-                          <select 
-                            value={maxTokens}
-                            onChange={(e) => setMaxTokens(parseInt(e.target.value))}
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded px-2.5 py-1.5 focus:outline-none"
-                          >
-                            <option value="2048">2048 Tokens</option>
-                            <option value="4096">4096 Tokens</option>
-                            <option value="8192">8192 Tokens</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Simulation logs */}
-                    <div className="md:col-span-2 glass-panel rounded-2xl p-5 border-white/5 space-y-3">
-                      <h4 className="font-bold text-xs text-white uppercase tracking-wider">Agent Context Simulation</h4>
-                      <p className="text-xs text-zinc-550 leading-relaxed">
-                        This agent requires custom vector databases or independent Groq API configurations. Provide a custom API key for this agent in **System Settings** when active, or trigger the mock evaluation pipeline below.
-                      </p>
-                      
-                      <div className="bg-zinc-950/60 p-4 rounded-xl border border-zinc-900/80 font-mono text-[11px] text-zinc-450 leading-relaxed min-h-[100px] flex items-center justify-center text-center">
-                        <div>
-                          <Info className="w-5 h-5 text-zinc-600 mx-auto mb-2" />
-                          <span>Wait for pipeline trigger. Enter startup pitch in validation dashboard home.</span>
-                        </div>
-                      </div>
-                    </div>
-
-                  </div>
-
                 </div>
               )}
 
@@ -1318,7 +1563,7 @@ function App() {
                   </div>
 
                   {/* API Status Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     
                     {/* Validation Agent Config */}
                     <div className="glass-panel rounded-2xl p-6 border-white/5 space-y-4 hover:border-amber-500/20 transition-all duration-300">
@@ -1402,6 +1647,92 @@ function App() {
                         <div className="flex justify-between">
                           <span>Avg Latency</span>
                           <span className="text-zinc-200 font-semibold">{systemStatus?.api_keys?.strategy_agent?.avg_latency || '1.6s'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Finance Agent Config */}
+                    <div className="glass-panel rounded-2xl p-6 border-white/5 space-y-4 hover:border-amber-500/20 transition-all duration-300">
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-amber-500/10 rounded-xl text-amber-500">
+                            <DollarSign className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-sm text-white">Finance Agent</h3>
+                            <p className="text-xs text-zinc-555">Financial Modeler</p>
+                          </div>
+                        </div>
+                        {systemStatus?.api_keys?.finance_agent?.configured ? (
+                          <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                            Active API
+                          </span>
+                        ) : (
+                          <span className="bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                            Demo Mock Mode
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="border-t border-zinc-900/65 pt-4 space-y-2.5 text-xs text-zinc-400">
+                        <div className="flex justify-between">
+                          <span>Provider</span>
+                          <span className="text-zinc-200 font-semibold">{systemStatus?.api_keys?.finance_agent?.provider || 'Groq Cloud'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>LLM Model</span>
+                          <span className="text-zinc-200 font-mono text-[11px] bg-zinc-950 px-2 py-0.5 rounded">{systemStatus?.api_keys?.finance_agent?.model || 'llama-3.3-70b-versatile'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Estimated Precision</span>
+                          <span className="text-zinc-200 font-semibold">{systemStatus?.api_keys?.finance_agent?.accuracy || '95.1%'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Avg Latency</span>
+                          <span className="text-zinc-200 font-semibold">{systemStatus?.api_keys?.finance_agent?.avg_latency || '1.8s'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Market Agent Config */}
+                    <div className="glass-panel rounded-2xl p-6 border-white/5 space-y-4 hover:border-amber-500/20 transition-all duration-300">
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-amber-500/10 rounded-xl text-amber-500">
+                            <BarChart className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-sm text-white">Market Agent</h3>
+                            <p className="text-xs text-zinc-555">Market Research</p>
+                          </div>
+                        </div>
+                        {systemStatus?.api_keys?.market_agent?.configured ? (
+                          <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                            Active API
+                          </span>
+                        ) : (
+                          <span className="bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                            Demo Mock Mode
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="border-t border-zinc-900/65 pt-4 space-y-2.5 text-xs text-zinc-400">
+                        <div className="flex justify-between">
+                          <span>Provider</span>
+                          <span className="text-zinc-200 font-semibold">{systemStatus?.api_keys?.market_agent?.provider || 'Groq Cloud'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>LLM Model</span>
+                          <span className="text-zinc-200 font-mono text-[11px] bg-zinc-950 px-2 py-0.5 rounded">{systemStatus?.api_keys?.market_agent?.model || 'llama-3.3-70b-versatile'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Estimated Precision</span>
+                          <span className="text-zinc-200 font-semibold">{systemStatus?.api_keys?.market_agent?.accuracy || '89.2%'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Avg Latency</span>
+                          <span className="text-zinc-200 font-semibold">{systemStatus?.api_keys?.market_agent?.avg_latency || '1.1s'}</span>
                         </div>
                       </div>
                     </div>
