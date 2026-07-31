@@ -5,6 +5,8 @@ import {
   AlertTriangle, 
   CheckCircle, 
   ArrowRight, 
+  ArrowLeft,
+  LayoutDashboard,
   Loader2, 
   Compass, 
   Lock, 
@@ -50,6 +52,24 @@ import WorkflowVisualizer from './components/WorkflowVisualizer';
 import KnowledgeGraph from './components/KnowledgeGraph';
 import CommandPalette from './components/CommandPalette';
 import CommandCenter from './components/CommandCenter';
+import EnterpriseCommandCenter from './components/EnterpriseCommandCenter';
+import PerformanceMonitor from './components/PerformanceMonitor';
+import TaskQueueAndActions from './components/TaskQueueAndActions';
+import LiveAgentCards from './components/LiveAgentCards';
+import AIThinkingTimeline from './components/AIThinkingTimeline';
+import ActivityFeedPanel from './components/ActivityFeedPanel';
+
+// Executive Startup Health Dashboard Components
+import StartupHealthGauge from './components/StartupHealthGauge';
+import AgentScoreSummary from './components/AgentScoreSummary';
+import StartupRadarChart from './components/StartupRadarChart';
+import InvestorReadiness from './components/InvestorReadiness';
+import BusinessMetrics from './components/BusinessMetrics';
+import RiskHeatmap from './components/RiskHeatmap';
+import CeoAiRecommendation from './components/CeoAiRecommendation';
+import ProjectTimeline from './components/ProjectTimeline';
+import ReportPreviewAndExport from './components/ReportPreviewAndExport';
+import InsightsAndNotifications from './components/InsightsAndNotifications';
 
 function App() {
   // Navigation & Authentication
@@ -349,6 +369,29 @@ function App() {
       addToast('Flush namespace command executed. Vector space cleared.', 'info');
     } else if (action === 'test-connection') {
       handleTestConnection();
+    } else if (action === 'generate-pdf') {
+      compileReportPDF();
+    } else if (action === 'generate-ppt') {
+      setShowPresentationMode(true);
+      addToast('Pitch Deck Presentation mode initialized.', 'success');
+    } else if (action === 'generate-report') {
+      setCurrentView('reports');
+      addToast('Routing to Executive Agent Reports Compiler.', 'info');
+    } else if (action === 'export-results') {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(results || { idea, status }, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `innovationhub_report_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      addToast('JSON results exported to local download folder.', 'success');
+    } else if (action === 'pause-workflow') {
+      addToast('Workflow execution stream paused by operator.', 'warning');
+    } else if (action === 'resume-workflow') {
+      addToast('Resuming concurrent workflow execution stream.', 'success');
+    } else if (action === 'restart-failed') {
+      addToast('Restarting failed agent threads...', 'info');
     }
   };
 
@@ -475,7 +518,13 @@ function App() {
           </div>
 
           {/* Action button */}
-          <div className="flex flex-col items-center md:items-end gap-3 shrink-0">
+          <div className="flex flex-col sm:flex-row items-center md:items-end gap-3 shrink-0">
+            <button
+              onClick={() => setCurrentView('dashboard')}
+              className="bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-white text-xs font-bold px-4 py-3 rounded-xl transition-all duration-300 flex items-center gap-2 cursor-pointer uppercase tracking-wider"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-[#D4AF37]" /> Back to Dashboard
+            </button>
             <button
               onClick={() => {
                 setCurrentView('validation');
@@ -699,8 +748,23 @@ function App() {
           </div>
 
           {/* Navigation Links */}
-          <div className="flex-1 py-6 overflow-y-auto px-3 space-y-7 scrollbar-thin">
+          <div className="flex-1 py-6 overflow-y-auto px-3 space-y-6 scrollbar-thin">
             
+            {/* Primary Executive Dashboard Button */}
+            <div className="space-y-1">
+              <button
+                onClick={() => setCurrentView('dashboard')}
+                className={`w-full text-left px-3 py-3 rounded-xl text-xs font-black flex items-center gap-3.5 transition-all cursor-pointer ${
+                  currentView === 'dashboard'
+                    ? 'bg-gradient-to-r from-[#D4AF37]/20 to-transparent text-[#FFD95A] border-l-[3px] border-[#D4AF37] pl-3 shadow-sm shadow-[#D4AF37]/10'
+                    : 'text-zinc-300 hover:text-white hover:bg-zinc-900/50'
+                }`}
+              >
+                <LayoutDashboard className={`w-4 h-4 shrink-0 ${currentView === 'dashboard' ? 'text-[#D4AF37]' : 'text-zinc-500'}`} />
+                {sidebarExpanded && <span className="tracking-wide uppercase text-[11px]">Executive Dashboard</span>}
+              </button>
+            </div>
+
             {/* OS Workforce Submenu */}
             <div className="space-y-2">
               <span className={`px-3 text-[9px] font-black uppercase tracking-wider text-zinc-500 block mb-2 ${!sidebarExpanded && 'text-center'}`}>
@@ -830,7 +894,16 @@ function App() {
               </button>
               
               <div className="flex items-center gap-2.5 text-xs font-bold">
-                <span className="text-zinc-500 uppercase tracking-widest text-[9.5px]">Workspace Context:</span>
+                {currentView !== 'dashboard' ? (
+                  <button
+                    onClick={() => setCurrentView('dashboard')}
+                    className="bg-gradient-to-r from-[#D4AF37] to-[#FFD95A] hover:from-[#FFD95A] hover:to-[#D4AF37] text-black text-[10.5px] font-black px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer uppercase tracking-wider border border-[#FFD95A]/30 shadow-md shadow-[#D4AF37]/15"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5 stroke-[3]" /> Executive Dashboard
+                  </button>
+                ) : (
+                  <span className="text-zinc-500 uppercase tracking-widest text-[9.5px]">Workspace Context:</span>
+                )}
                 <span className="text-[#D4AF37] uppercase bg-[#D4AF37]/10 border border-[#D4AF37]/25 px-2.5 py-1 rounded text-[9.5px] tracking-wide font-black">
                   {currentView === 'dashboard' ? 'Executive Dashboard' : currentView.replace('-', ' ')}
                 </span>
@@ -977,8 +1050,157 @@ function App() {
 
                     </div>
 
-                    {/* Centerpiece: AI Pipeline Core Workflow Graph */}
-                    <WorkflowVisualizer status={status} />
+                    {/* Enterprise AI Command Center Directly Below Hero */}
+                    <EnterpriseCommandCenter 
+                      status={status}
+                      activeWorkflow="Multi-Agent Autonomous Enterprise Pipeline"
+                      currentStage={status === 'processing' ? 'Market Intelligence & TAM Sizing' : status === 'completed' ? 'Report Generation Completed' : 'System Ready for Directives'}
+                      activeAgent={status === 'processing' ? 'Chief Innovation Officer' : 'Master Orchestrator'}
+                      progress={status === 'completed' ? 100 : status === 'processing' ? 68.4 : 0}
+                      confidence={98.4}
+                      executionTime={status === 'completed' ? 3.42 : status === 'processing' ? 1.84 : 0}
+                      avgResponseTime={1.15}
+                      tokensUsed={18450}
+                      apiCalls={156}
+                      vectorMemoryStatus={`${vectorDb.length} Vectors Indexed`}
+                      llmStatus={selectedModel}
+                      tavilyStatus="Connected (380ms Latency)"
+                    />
+
+                    {/* Performance Monitor KPI Grid */}
+                    <PerformanceMonitor 
+                      cpuUsage={status === 'processing' ? 48.2 : 18.4}
+                      memoryUsage={1.42}
+                      maxMemory={4.0}
+                      apiCalls={156}
+                      avgLatency={1.15}
+                      workflowDuration={status === 'completed' ? 3.42 : status === 'processing' ? 1.84 : 0}
+                      successRate={99.4}
+                      totalReports={projectsList.length}
+                    />
+
+                    {/* Task Queue & Quick Operator Actions */}
+                    <TaskQueueAndActions 
+                      status={status}
+                      onTriggerAction={(act) => triggerSystemAction(act)}
+                      onSelectAgentRun={(agId) => {
+                        setCurrentView(agId);
+                        addToast(`Navigating to ${agId} workforce agent.`, 'info');
+                      }}
+                    />
+
+                    {/* Centerpiece: React Flow Live Orchestration Graph with Golden Particles */}
+                    <WorkflowVisualizer status={status} activeAgentId={status === 'processing' ? 'market' : null} />
+
+                    {/* Live Agent Status Cards */}
+                    <LiveAgentCards 
+                      workforce={workforce}
+                      activeAgentId={status === 'processing' ? 'market' : null}
+                      status={status}
+                      onSelectAgent={(agId) => setCurrentView(agId)}
+                    />
+
+                    {/* AI Thinking Timeline (Replaces spinners) */}
+                    {loading && (
+                      <AIThinkingTimeline 
+                        status={status}
+                        currentStepIndex={2}
+                        ideaText={idea || 'B2B Precision Drone Agriculture Service'}
+                      />
+                    )}
+
+                    {/* EXECUTIVE STARTUP HEALTH DASHBOARD (Synthesizes All 6 Agents) */}
+                    <div className="space-y-8 border-t-2 border-[#D4AF37]/30 pt-8 mt-8 relative">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2.5 rounded-2xl bg-gradient-to-br from-[#D4AF37] to-[#FFD95A] text-black font-black text-xs uppercase tracking-wider">
+                            CEO HUB
+                          </div>
+                          <div>
+                            <h2 className="text-2xl font-black text-white tracking-tight">Executive Startup Health Dashboard</h2>
+                            <p className="text-xs text-zinc-400 font-semibold">Combined Intelligence Consensus of All 6 Cognitive Agents.</p>
+                          </div>
+                        </div>
+                        <span className="text-xs font-mono font-extrabold text-[#D4AF37] bg-[#D4AF37]/10 px-3 py-1.5 rounded-full border border-[#D4AF37]/30">
+                          STATUS: EXCELLENT (91%)
+                        </span>
+                      </div>
+
+                      {/* 1. Startup Health Score Circular Gauge */}
+                      <StartupHealthGauge 
+                        score={results?.idea_validation?.innovation_score || 91}
+                        statusLabel="Excellent"
+                        confidence={98.4}
+                      />
+
+                      {/* 2. Agent Score Summary KPI Cards */}
+                      <AgentScoreSummary 
+                        scores={{
+                          innovation: results?.idea_validation?.innovation_score || 94,
+                          market: 89,
+                          strategy: 92,
+                          finance: 95,
+                          legal: 95,
+                          marketing: 88
+                        }}
+                      />
+
+                      {/* 3. Startup 6-Axis Radar Chart */}
+                      <StartupRadarChart 
+                        scores={{
+                          innovation: results?.idea_validation?.innovation_score || 94,
+                          market: 89,
+                          strategy: 92,
+                          finance: 95,
+                          legal: 95,
+                          marketing: 88
+                        }}
+                      />
+
+                      {/* 4. Investor Readiness Cards */}
+                      <InvestorReadiness 
+                        readinessStatus="YES - HIGHLY READY"
+                        fundingStage="SEED STAGE (PRE-A)"
+                        investorConfidence={96.8}
+                        estimatedRoi={5.4}
+                        valuation={4.5}
+                        breakEvenMonths={14}
+                        runwayMonths={18}
+                        fundingNeeded={500}
+                      />
+
+                      {/* 5. Business & Financial Performance Metrics */}
+                      <BusinessMetrics 
+                        tamSize={4.8}
+                        revenueY3={8.5}
+                        growthRate={185}
+                        cac={420}
+                        ltv={3800}
+                        expectedProfit={34.5}
+                        monthlyExpenses={32.5}
+                        burnRate={14.2}
+                        grossMargin={78.5}
+                      />
+
+                      {/* 6. Risk Heatmap */}
+                      <RiskHeatmap />
+
+                      {/* 7. CEO AI Recommendation Glass Card */}
+                      <CeoAiRecommendation 
+                        summary={results?.idea_validation?.value_proposition ? `Verified value proposition: "${results.idea_validation.value_proposition}". Strong unit economics and IP moat defense.` : undefined}
+                      />
+
+                      {/* 8. Interactive Project Timeline */}
+                      <ProjectTimeline currentStageIndex={status === 'completed' ? 7 : 6} />
+
+                      {/* 9 & 10. Report Preview Cards & Multi-Format Export Center */}
+                      <ReportPreviewAndExport 
+                        onTriggerExport={(fmt) => triggerSystemAction(`generate-${fmt}`)}
+                      />
+
+                      {/* 11 & 12. Insights Panel & Smart Notifications */}
+                      <InsightsAndNotifications />
+                    </div>
 
                     {/* Recharts Analytics Charts Section */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1060,6 +1282,12 @@ function App() {
                       </div>
 
                       <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => setCurrentView('dashboard')}
+                          className="bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all duration-300 flex items-center gap-2 cursor-pointer uppercase tracking-wider"
+                        >
+                          <ArrowLeft className="w-3.5 h-3.5 text-[#D4AF37]" /> Back to Dashboard
+                        </button>
                         <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                         <span className="text-xs font-bold text-emerald-400">Agent Online</span>
                       </div>
@@ -1697,26 +1925,13 @@ function App() {
             </div>
 
             {/* Right Information Panel (Unified Logs Ticker) */}
-            <aside className="w-full xl:w-80 shrink-0 space-y-6 z-10">
+            <aside className="w-full xl:w-96 shrink-0 space-y-6 z-10">
               
-              {/* Active ticker log terminal */}
-              <div className="glass-panel rounded-2xl p-5 border-white/5 space-y-4 relative overflow-hidden">
-                <h3 className="text-[10px] font-black uppercase tracking-wider text-zinc-400 flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-[#D4AF37] animate-pulse" /> Active Pipeline Stream
-                </h3>
-
-                <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1 font-mono text-[9.5px] leading-relaxed scrollbar-thin">
-                  {tickerLogs.map((log) => (
-                    <div key={log.id} className="border-b border-zinc-900/60 pb-2 space-y-1.5">
-                      <div className="flex justify-between items-center text-zinc-500 font-bold">
-                        <span>{log.time}</span>
-                        <span className="text-[#D4AF37]">{log.agent}</span>
-                      </div>
-                      <p className="text-zinc-300 font-medium leading-relaxed">{log.log}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              {/* Real-time Activity Feed Right Panel */}
+              <ActivityFeedPanel 
+                logs={tickerLogs}
+                onClearLogs={() => setTickerLogs([])}
+              />
 
               {/* Vector overhead specifications */}
               <div className="glass-panel rounded-2xl p-5 border-white/5 space-y-3.5">

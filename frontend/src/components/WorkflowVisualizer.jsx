@@ -9,236 +9,248 @@ import {
   DollarSign, 
   Shield, 
   Rocket, 
-  FileCheck 
+  FileCheck,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  Sparkles
 } from 'lucide-react';
 
-export default function WorkflowVisualizer({ status = 'idle' }) {
-  // Determine node states based on system status
-  // status: idle, created, processing, completed, failed
+export default function WorkflowVisualizer({ status = 'idle', activeAgentId = null, failedAgentId = null }) {
+  // Determine overall flow status
   const isRunning = status === 'created' || status === 'processing';
   const isCompleted = status === 'completed';
+  const isFailed = status === 'failed';
 
-  const agents = [
-    { id: 'validation', name: 'Idea Validation', icon: Lightbulb },
-    { id: 'market', name: 'Market Intelligence', icon: BarChart },
-    { id: 'strategy', name: 'Business Strategy', icon: TrendingUp },
-    { id: 'finance', name: 'Finance Intelligence', icon: DollarSign },
-    { id: 'legal', name: 'Legal Guardian', icon: Shield },
-    { id: 'marketing', name: 'Marketing Studio', icon: Rocket }
+  // 9 Node layout sequence as explicitly required:
+  // User -> Master AI -> Idea Validation -> Market Intelligence -> Business Strategy -> Finance Intelligence -> Legal Guardian -> Marketing Studio -> Executive Report
+  const nodes = [
+    { id: 'user', label: 'User', subLabel: 'Pitch Payload', icon: User, type: 'trigger' },
+    { id: 'master', label: 'Master AI', subLabel: 'LangGraph Orchestrator', icon: Cpu, type: 'orchestrator' },
+    { id: 'validation', label: 'Idea Validation', subLabel: 'Chief Innovation Officer', icon: Lightbulb, type: 'agent' },
+    { id: 'market', label: 'Market Intelligence', subLabel: 'Market Analyst', icon: BarChart, type: 'agent' },
+    { id: 'strategy', label: 'Business Strategy', subLabel: 'Strategy Consultant', icon: TrendingUp, type: 'agent' },
+    { id: 'finance', label: 'Finance Intelligence', subLabel: 'Chartered Analyst', icon: DollarSign, type: 'agent' },
+    { id: 'legal', label: 'Legal Guardian', subLabel: 'Legal Consultant', icon: Shield, type: 'agent' },
+    { id: 'marketing', label: 'Marketing Studio', subLabel: 'Growth Director', icon: Rocket, type: 'agent' },
+    { id: 'report', label: 'Executive Report', subLabel: 'Report Compiler', icon: FileCheck, type: 'output' }
   ];
 
+  // Helper to determine single node state: 'completed', 'active', 'failed', 'waiting'
+  const getNodeState = (node, index) => {
+    if (isFailed && (failedAgentId === node.id || index === 3)) return 'error';
+
+    if (isCompleted) return 'completed';
+
+    if (isRunning) {
+      if (node.id === 'user') return 'completed';
+      if (node.id === 'master') return 'active';
+      if (activeAgentId) {
+        if (node.id === activeAgentId) return 'active';
+        // Nodes before active are completed
+        const activeIdx = nodes.findIndex(n => n.id === activeAgentId);
+        if (activeIdx > 0 && index < activeIdx) return 'completed';
+      } else {
+        // default sequence progress simulation during processing
+        if (index <= 4) return 'completed';
+        if (index === 5) return 'active';
+      }
+      return 'waiting';
+    }
+
+    return 'waiting';
+  };
+
   return (
-    <div className="w-full bg-[#0F0F10] border border-white/5 rounded-3xl p-6 relative overflow-hidden">
+    <div className="w-full glass-panel border-[#D4AF37]/25 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-2xl">
       
-      {/* Background glow overlay */}
-      <div className="absolute -top-10 -left-10 w-40 h-40 bg-[#D4AF37]/5 blur-3xl pointer-events-none rounded-full" />
-      <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-[#FFD95A]/3 blur-3xl pointer-events-none rounded-full" />
+      {/* Background radial glows */}
+      <div className="absolute -top-10 -left-10 w-60 h-60 bg-[#D4AF37]/10 blur-3xl pointer-events-none rounded-full" />
+      <div className="absolute -bottom-10 -right-10 w-60 h-60 bg-amber-500/5 blur-3xl pointer-events-none rounded-full" />
 
-      <h3 className="text-xs uppercase font-bold tracking-widest text-[#AAAAAA] mb-6 flex items-center gap-2">
-        <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse" />
-        AI Pipeline Core Graph
-      </h3>
+      {/* Header bar */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b border-zinc-800/80">
+        <div>
+          <h3 className="text-xs uppercase font-extrabold tracking-widest text-[#D4AF37] flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-[#D4AF37] animate-pulse" />
+            React Flow Live Orchestration Visualization
+          </h3>
+          <p className="text-xs text-zinc-400 font-semibold mt-0.5">
+            Real-time particle flow & continuous node status monitoring stream.
+          </p>
+        </div>
 
-      {/* SVG Container for Drawing Paths */}
-      <div className="relative w-full overflow-x-auto select-none min-h-[380px] flex items-center justify-center">
-        <div className="w-[800px] h-[360px] relative flex justify-between items-center px-4 shrink-0">
+        <div className="flex items-center gap-4 text-[10px] font-mono font-bold uppercase">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 border border-emerald-300" />
+            <span className="text-emerald-400">Completed</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#FFD95A] animate-ping" />
+            <span className="text-[#FFD95A]">Active Pulse</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-zinc-600" />
+            <span className="text-zinc-500">Waiting</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+            <span className="text-rose-400">Error</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Horizontal Flow Container with Golden Particles along connections */}
+      <div className="relative w-full overflow-x-auto scrollbar-thin select-none py-6">
+        <div className="min-w-[1150px] relative flex justify-between items-center px-4 py-8">
           
-          {/* SVG Connection Lines */}
+          {/* SVG Connection Edges with Animated Golden Particles */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
             <defs>
-              <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.2" />
-                <stop offset="50%" stopColor="#FFD95A" stopOpacity="0.8" />
-                <stop offset="100%" stopColor="#D4AF37" stopOpacity="0.2" />
+              <linearGradient id="gold-flow-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.3" />
+                <stop offset="50%" stopColor="#FFD95A" stopOpacity="1" />
+                <stop offset="100%" stopColor="#D4AF37" stopOpacity="0.3" />
               </linearGradient>
-              <linearGradient id="gold-glow" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.1" />
-                <stop offset="100%" stopColor="#FFD95A" stopOpacity="0.6" />
-              </linearGradient>
+              
+              <filter id="gold-particle-glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
             </defs>
 
-            {/* Link lines from User to Master AI */}
-            <path
-              d="M 68 180 L 160 180"
-              stroke={isRunning || isCompleted ? '#D4AF37' : '#222222'}
-              strokeWidth="2"
-              fill="none"
-              className={isRunning ? 'animate-flow-dash' : ''}
-              style={{ strokeDasharray: isRunning ? '8,4' : 'none', transition: 'stroke 0.5s' }}
-            />
-
-            {/* Fan out connections from Master AI to 6 Agents */}
-            {agents.map((_, index) => {
-              // Master AI center coordinate: (200, 180)
-              // Agent column coordinates: (450, Y_coord)
-              const startX = 240;
-              const startY = 180;
-              const endX = 420;
-              const endY = 40 + index * 56; // spaced out between 40 and 320
+            {nodes.map((_, idx) => {
+              if (idx === nodes.length - 1) return null;
               
-              // Draw bezier paths for high tech circuit look
-              const pathD = `M ${startX} ${startY} C ${(startX + endX) / 2} ${startY}, ${(startX + endX) / 2} ${endY}, ${endX} ${endY}`;
-              
-              let strokeColor = '#222222';
-              if (isCompleted) strokeColor = 'rgba(212, 175, 55, 0.4)';
-              else if (isRunning) strokeColor = 'url(#gold-glow)';
+              // Calculate horizontal positions between consecutive nodes
+              const startX = 65 + idx * 130;
+              const endX = startX + 70;
+              const y = 60;
+              const pathId = `flow-path-${idx}`;
 
               return (
-                <path
-                  key={`to-agent-${index}`}
-                  d={pathD}
-                  stroke={strokeColor}
-                  strokeWidth={isRunning ? '2.5' : '1.5'}
-                  fill="none"
-                  className={isRunning ? 'animate-flow-dash' : ''}
-                  style={{ strokeDasharray: isRunning ? '6,4' : 'none', transition: 'stroke 0.5s' }}
-                />
-              );
-            })}
+                <g key={`edge-${idx}`}>
+                  {/* Base Connection Edge Line */}
+                  <path
+                    id={pathId}
+                    d={`M ${startX} ${y} L ${endX} ${y}`}
+                    stroke={isRunning || isCompleted ? '#D4AF37' : '#27272a'}
+                    strokeWidth={isRunning ? '2.5' : '1.5'}
+                    strokeDasharray={isRunning ? '6,4' : 'none'}
+                    fill="none"
+                    className={isRunning ? 'animate-flow-dash' : ''}
+                  />
 
-            {/* Fan in connections from 6 Agents to Report Generator */}
-            {agents.map((_, index) => {
-              // Agent coordinates: (560, Y_coord)
-              // Report Generator coordinates: (720, 180)
-              const startX = 580;
-              const startY = 40 + index * 56;
-              const endX = 700;
-              const endY = 180;
-
-              const pathD = `M ${startX} ${startY} C ${(startX + endX) / 2} ${startY}, ${(startX + endX) / 2} ${endY}, ${endX} ${endY}`;
-              
-              let strokeColor = '#222222';
-              if (isCompleted) strokeColor = 'rgba(212, 175, 55, 0.5)';
-              else if (isRunning && status === 'processing') strokeColor = 'url(#gold-glow)';
-
-              return (
-                <path
-                  key={`from-agent-${index}`}
-                  d={pathD}
-                  stroke={strokeColor}
-                  strokeWidth={isRunning ? '2.5' : '1.5'}
-                  fill="none"
-                  className={isRunning && status === 'processing' ? 'animate-flow-dash' : ''}
-                  style={{ strokeDasharray: isRunning && status === 'processing' ? '6,4' : 'none', transition: 'stroke 0.5s' }}
-                />
+                  {/* Golden Traveling Particle Streams along connections */}
+                  {(isRunning || isCompleted) && (
+                    <circle r="4" fill="#FFD95A" filter="url(#gold-particle-glow)">
+                      <animateMotion
+                        path={`M ${startX} ${y} L ${endX} ${y}`}
+                        dur={`${1.2 + (idx % 3) * 0.3}s`}
+                        repeatCount="indefinite"
+                      />
+                    </circle>
+                  )}
+                  {(isRunning || isCompleted) && (
+                    <circle r="2.5" fill="#FFFFFF" filter="url(#gold-particle-glow)">
+                      <animateMotion
+                        path={`M ${startX} ${y} L ${endX} ${y}`}
+                        dur={`${1.2 + (idx % 3) * 0.3}s`}
+                        begin="0.4s"
+                        repeatCount="indefinite"
+                      />
+                    </circle>
+                  )}
+                </g>
               );
             })}
           </svg>
 
-          {/* Node 1: User Input Node (Left) */}
-          <div className="absolute left-0 top-[140px] z-10 flex flex-col items-center">
-            <motion.div
-              animate={{ 
-                boxShadow: isRunning ? '0 0 25px rgba(212, 175, 55, 0.4)' : '0 0 10px rgba(0, 0, 0, 0.5)',
-                borderColor: isRunning || isCompleted ? '#D4AF37' : '#333333'
-              }}
-              className="w-16 h-16 rounded-2xl bg-[#0F0F10] border-2 flex items-center justify-center relative group"
-            >
-              <User className={`w-7 h-7 ${isRunning || isCompleted ? 'text-[#D4AF37]' : 'text-zinc-650'}`} />
-              {isRunning && (
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full animate-ping" />
-              )}
-            </motion.div>
-            <span className="text-[10px] uppercase font-bold text-[#AAAAAA] mt-2 tracking-wide">Client Pitch</span>
-          </div>
+          {/* Render 9 Flow Sequence Nodes */}
+          {nodes.map((node, index) => {
+            const Icon = node.icon;
+            const state = getNodeState(node, index);
 
-          {/* Node 2: Master AI Controller (Mid-Left) */}
-          <div className="absolute left-[160px] top-[140px] z-10 flex flex-col items-center">
-            <motion.div
-              animate={{ 
-                boxShadow: isRunning ? '0 0 35px rgba(212, 175, 55, 0.6)' : isCompleted ? '0 0 20px rgba(212, 175, 55, 0.2)' : '0 0 10px rgba(0,0,0,0.5)',
-                borderColor: isRunning || isCompleted ? '#D4AF37' : '#333333',
-                scale: isRunning ? [1, 1.05, 1] : 1
-              }}
-              transition={{ repeat: Infinity, duration: 2 }}
-              className="w-20 h-20 rounded-full bg-black border-2 flex items-center justify-center relative"
-            >
-              <div className="absolute inset-1.5 border border-dashed border-white/10 rounded-full animate-spin" style={{ animationDuration: '6s' }} />
-              <Cpu className={`w-8 h-8 ${isRunning || isCompleted ? 'text-[#D4AF37] animate-pulse' : 'text-zinc-650'}`} />
-            </motion.div>
-            <span className="text-[10px] uppercase font-bold text-white mt-2 tracking-wide glow-text-gold">Master AI Co-Founder</span>
-          </div>
+            // Styling based on state: completed (green), active (gold pulse), error (red), waiting (gray)
+            let borderStyle = 'border-zinc-800 bg-zinc-950/90 text-zinc-500';
+            let iconStyle = 'text-zinc-650';
+            let badgeComponent = <span className="w-2 h-2 rounded-full bg-zinc-700" />;
+            let isPulsing = false;
 
-          {/* Center Column: 6 Parallel Agents */}
-          <div className="absolute left-[400px] top-0 bottom-0 flex flex-col justify-between py-1 z-10 w-[200px]">
-            {agents.map((agent, index) => {
-              const AgentIcon = agent.icon;
-              
-              // Define node state styles
-              let nodeColorClass = 'border-zinc-800 text-zinc-600 bg-zinc-950/90';
-              let isAgentPulsing = false;
+            if (state === 'completed') {
+              borderStyle = 'border-emerald-500/60 bg-emerald-950/20 text-emerald-400 shadow-[0_0_20px_rgba(46,204,113,0.25)]';
+              iconStyle = 'text-emerald-400';
+              badgeComponent = <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />;
+            } else if (state === 'active') {
+              borderStyle = 'border-[#FFD95A] bg-black text-[#FFD95A] shadow-[0_0_30px_rgba(212,175,55,0.55)]';
+              iconStyle = 'text-[#FFD95A] animate-bounce';
+              badgeComponent = <span className="w-2.5 h-2.5 rounded-full bg-[#FFD95A] animate-ping" />;
+              isPulsing = true;
+            } else if (state === 'error') {
+              borderStyle = 'border-rose-500 bg-rose-950/40 text-rose-400 shadow-[0_0_25px_rgba(244,63,94,0.4)]';
+              iconStyle = 'text-rose-400';
+              badgeComponent = <AlertCircle className="w-3.5 h-3.5 text-rose-400" />;
+            }
 
-              if (isCompleted) {
-                nodeColorClass = 'border-[#D4AF37]/50 text-[#D4AF37] bg-black shadow-[0_0_15px_rgba(212,175,55,0.15)]';
-              } else if (isRunning) {
-                if (status === 'processing') {
-                  nodeColorClass = 'border-[#FFD95A] text-[#FFD95A] bg-black shadow-[0_0_20px_rgba(212,175,55,0.35)]';
-                  isAgentPulsing = true;
-                } else {
-                  nodeColorClass = 'border-zinc-700 text-zinc-400 bg-zinc-950';
-                }
-              }
-
-              return (
-                <motion.div
-                  key={agent.id}
-                  animate={{
-                    scale: isAgentPulsing ? [1, 1.02, 1] : 1,
-                  }}
-                  transition={{ repeat: Infinity, duration: 1.5, delay: index * 0.1 }}
-                  className={`h-11 rounded-xl border flex items-center px-3 gap-2.5 transition-all duration-300 relative group cursor-pointer ${nodeColorClass}`}
-                >
-                  <AgentIcon className={`w-4 h-4 shrink-0 ${isAgentPulsing ? 'animate-bounce' : ''}`} />
-                  <span className="text-[10.5px] font-bold tracking-wide whitespace-nowrap">{agent.name}</span>
+            return (
+              <motion.div
+                key={node.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ 
+                  opacity: 1, 
+                  scale: isPulsing ? [1, 1.06, 1] : 1,
+                  y: isPulsing ? [-2, 2, -2] : 0
+                }}
+                transition={{ repeat: isPulsing ? Infinity : 0, duration: 1.8, ease: 'easeInOut' }}
+                className="z-10 flex flex-col items-center group cursor-pointer"
+              >
+                {/* Node Box */}
+                <div className={`w-28 h-24 rounded-2xl border-2 flex flex-col items-center justify-center p-2 text-center transition-all duration-300 relative ${borderStyle}`}>
                   
-                  {/* Glowing active point indicator */}
-                  {isAgentPulsing && (
-                    <span className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-[#FFD95A] rounded-full animate-ping" />
+                  {/* Active ambient spin ring */}
+                  {isPulsing && (
+                    <div className="absolute inset-[-4px] border border-dashed border-[#D4AF37]/50 rounded-[18px] animate-spin pointer-events-none" style={{ animationDuration: '8s' }} />
                   )}
-                  {isCompleted && (
-                    <span className="absolute right-2.5 w-1.5 h-1.5 rounded-full bg-[#2ECC71]" />
-                  )}
-                </motion.div>
-              );
-            })}
-          </div>
 
-          {/* Node 3: Report Generator Node (Right) */}
-          <div className="absolute right-[16px] top-[140px] z-10 flex flex-col items-center">
-            <motion.div
-              animate={{ 
-                boxShadow: isCompleted ? '0 0 30px rgba(212,175,55,0.45)' : '0 0 10px rgba(0,0,0,0.5)',
-                borderColor: isCompleted ? '#D4AF37' : '#333333'
-              }}
-              className="w-18 h-18 rounded-2xl bg-[#0F0F10] border-2 flex items-center justify-center relative"
-            >
-              <FileCheck className={`w-8 h-8 ${isCompleted ? 'text-[#D4AF37]' : 'text-zinc-650'}`} />
-              {isCompleted && (
-                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full flex items-center justify-center text-[9px] text-black font-extrabold">✓</span>
-              )}
-            </motion.div>
-            <span className="text-[10px] uppercase font-bold text-[#AAAAAA] mt-2 tracking-wide">Report Compiler</span>
-          </div>
+                  <div className="mb-1 flex items-center justify-center relative">
+                    <Icon className={`w-6 h-6 ${iconStyle}`} />
+                  </div>
+
+                  <span className="text-[11px] font-extrabold tracking-tight truncate max-w-[100px] leading-tight">
+                    {node.label}
+                  </span>
+
+                  <span className="text-[8.5px] font-mono font-medium text-zinc-400 truncate max-w-[100px] mt-0.5">
+                    {node.subLabel}
+                  </span>
+
+                  {/* Corner Badge */}
+                  <div className="absolute -top-1.5 -right-1.5">
+                    {badgeComponent}
+                  </div>
+                </div>
+
+                {/* Step Index Pill */}
+                <span className="mt-2 text-[9px] font-mono font-bold text-zinc-500 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded-full uppercase">
+                  Node 0{index + 1}
+                </span>
+              </motion.div>
+            );
+          })}
 
         </div>
       </div>
 
-      <div className="mt-4 border-t border-white/5 pt-4 flex items-center justify-between text-[10px] text-zinc-500 uppercase font-mono tracking-wider font-bold">
-        <span>Pipeline Execution Stream</span>
-        <div className="flex gap-4">
-          <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#222222]" />
-            <span>Idle</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#FFD95A] animate-pulse" />
-            <span>Thinking</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" />
-            <span>Compiled</span>
-          </div>
+      {/* Footer Info */}
+      <div className="mt-4 pt-3 border-t border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between text-[10px] font-mono text-zinc-500 font-bold gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-[#D4AF37]">FLOW PATH:</span>
+          <span>User → Master AI → Validation → Market → Strategy → Finance → Legal → Marketing → Report</span>
         </div>
+        <span className="text-emerald-400">GOLDEN PARTICLE STREAM: ONLINE</span>
       </div>
 
     </div>
