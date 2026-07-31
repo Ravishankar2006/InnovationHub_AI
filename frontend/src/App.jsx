@@ -160,16 +160,14 @@ function App() {
   // Fetch Projects List for Table View
   const fetchProjects = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/system/status');
-      // If we can construct project lists
-      setProjectsList([
-        { id: 1, idea: 'Autonomous drone-as-a-service for precision crop spraying.', status: 'completed', score: 85, created_at: '2026-07-28 09:12' },
-        { id: 2, idea: 'AI platform that translates natural language text into optimized SQL queries.', status: 'completed', score: 88, created_at: '2026-07-28 09:53' },
-        { id: 3, idea: 'P2P marketplace for pre-loved books with local exchanges.', status: 'failed', score: 0, created_at: '2026-07-28 10:07' },
-        { id: 4, idea: 'Automated locker drop-off systems for residential complexes.', status: 'completed', score: 80, created_at: '2026-07-28 12:15' }
-      ]);
+      const res = await fetch('http://localhost:8000/api/projects');
+      if (res.ok) {
+        const data = await res.json();
+        // Map API response to the shape expected by the table (add score:0 default)
+        setProjectsList(data.map((p) => ({ ...p, score: 0 })));
+      }
     } catch (e) {
-      console.error(e);
+      console.error('Failed to fetch projects:', e);
     }
   };
 

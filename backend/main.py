@@ -15,6 +15,7 @@ from agents.finance_agent import generate_finance_model
 from agents.market_agent import generate_market_analysis
 from agents.legal_agent import generate_legal_risk_analysis
 from agents.marketing_agent import generate_marketing_strategy
+from agents.industry_classifier import classify_industry, get_industry_legal_context
 
 # Intercept stdout/stderr to prevent detached PTY errors
 class SafeWriter:
@@ -63,12 +64,17 @@ async def run_idea_validation(project_id: int, db_session: Session):
         project.status = "processing"
         db_session.commit()
         
-        # Run agents concurrently
-        validation_task = validate_idea(project.idea)
+        # Preprocessing step: classify the startup's industry domain
+        # This runs before the agents to enrich the Legal Agent prompt
+        industry = await classify_industry(project.idea)
+        industry_legal_context = get_industry_legal_context(industry)
+        
+        # Run agents concurrently (existing pipeline unchanged)
+        validation_task = validate_idea(project.idea, industry=industry)
         strategy_task = generate_strategy(project.idea)
         finance_task = generate_finance_model(project.idea)
         market_task = generate_market_analysis(project.idea)
-        legal_task = generate_legal_risk_analysis(project.idea)
+        legal_task = generate_legal_risk_analysis(project.idea, industry_context=industry_legal_context)
         marketing_task = generate_marketing_strategy(project.idea)
         
         validation_res, strategy_res, finance_res, market_res, legal_res, marketing_res = await asyncio.gather(
@@ -236,6 +242,21 @@ async def get_project_progress(project_id: int, db: Session = Depends(get_db)):
     if not project:
         raise HTTPException(status_code=404, detail="Project not found.")
     return {"status": project.status}
+
+@app.get("/api/projects")
+async def get_all_projects(db: Session = Depends(get_db)):
+    """Returns all StartupProject records ordered by newest first."""
+    projects = db.query(StartupProject).order_by(StartupProject.created_at.desc()).all()
+    return [
+        {
+            "id": p.id,
+            "idea": p.idea,
+            "status": p.status,
+            "created_at": p.created_at.strftime("%Y-%m-%d %H:%M") if p.created_at else None,
+            "updated_at": p.updated_at.strftime("%Y-%m-%d %H:%M") if p.updated_at else None,
+        }
+        for p in projects
+    ]
 
 @app.get("/api/system/status")
 async def get_system_status(db: Session = Depends(get_db)):

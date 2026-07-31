@@ -30,7 +30,7 @@ class LegalRiskOutput(pydantic.BaseModel):
         description="Overview of how data privacy (e.g., GDPR, CCPA, DPDP Act) affects the business model."
     )
 
-SYSTEM_PROMPT = """You are the Lead Legal & Risk Consultant at InnovationHub AI.
+BASE_SYSTEM_PROMPT = """You are the Lead Legal & Risk Consultant at InnovationHub AI.
 Your responsibility is to analyze a startup idea and produce a highly accurate, detailed Legal and Risk Assessment report.
 
 Analyze the startup idea and produce a report that details:
@@ -41,8 +41,21 @@ Analyze the startup idea and produce a report that details:
 5. Data Privacy Concerns and necessary data governance frameworks.
 
 Provide realistic, industry-standard legal assessments.
-Strictly adhere to the provided schema and output correct, structured JSON.
-"""
+Strictly adhere to the provided schema and output correct, structured JSON."""
+
+
+def _build_system_prompt(industry_context: str) -> str:
+    """Builds the full system prompt by appending industry-specific regulatory context."""
+    if not industry_context or industry_context.startswith("This is a technology startup"):
+        return BASE_SYSTEM_PROMPT + "\n"
+    return (
+        BASE_SYSTEM_PROMPT
+        + "\n\n--- INDUSTRY-SPECIFIC REGULATORY CONTEXT ---\n"
+        + industry_context
+        + "\nEnsure the compliance_requirements and regulatory_hurdles fields prominently include "
+        + "the above industry-specific regulations."
+        + "\n"
+    )
 
 def generate_mock_legal(idea_text: str) -> LegalRiskOutput:
     """Generates a high-quality mock response for demo purposes when no API key is set."""
@@ -82,12 +95,14 @@ def generate_mock_legal(idea_text: str) -> LegalRiskOutput:
         data_privacy_concerns="Must implement robust data anonymization and user consent flows to comply with GDPR, CCPA, and the Indian DPDP Act. Ensure data localization where legally mandated."
     )
 
-async def generate_legal_risk_analysis(idea_text: str) -> LegalRiskOutput:
+async def generate_legal_risk_analysis(idea_text: str, industry_context: str = "") -> LegalRiskOutput:
     """Formulates a detailed legal & risk analysis for a startup idea using the Groq API.
     Falls back to a high-quality mock generator if no GROQ_LEGAL_API_KEY is configured.
 
     Args:
         idea_text: The description of the startup idea.
+        industry_context: Optional industry-specific regulatory context string injected
+                          by the industry classifier preprocessing step.
 
     Returns:
         An instance of LegalRiskOutput with structured legal data.
@@ -102,13 +117,14 @@ async def generate_legal_risk_analysis(idea_text: str) -> LegalRiskOutput:
     
     try:
         schema_json = json.dumps(LegalRiskOutput.model_json_schema())
+        system_prompt = _build_system_prompt(industry_context)
         prompt = f"Please provide a comprehensive legal and risk analysis for the following startup idea:\n\n{idea_text}"
         
         chat_completion = await client.chat.completions.create(
             messages=[
                 {
                     "role": "system",
-                    "content": f"{SYSTEM_PROMPT}\n\nYou must respond ONLY with a JSON object matching this schema:\n{schema_json}"
+                    "content": f"{system_prompt}\n\nYou must respond ONLY with a JSON object matching this schema:\n{schema_json}"
                 },
                 {
                     "role": "user",
